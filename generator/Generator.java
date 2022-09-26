@@ -33,6 +33,7 @@ public record Generator(Path cache, HttpClient http) {
     GenerateJUnit.main("5.9.0-M1");
     GenerateJUnit.main("5.9.0-RC1");
     GenerateJUnit.main("5.9.0");
+    GenerateJUnit.main("5.9.1");
     GenerateLWJGL.main("3.3.1");
   }
 
