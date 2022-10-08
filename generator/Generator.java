@@ -26,6 +26,7 @@ public record Generator(Path cache, HttpClient http) {
     GenerateFXGL.main("17.1");
     GenerateFXGL.main("17.2");
     GenerateGluonAttach.main("4.0.14");
+    GenerateGluonAttach.main("4.0.15");
     GenerateJavaFX.main("18");
     GenerateJavaFX.main("18.0.1");
     GenerateJUnit.main("5.8.0");
