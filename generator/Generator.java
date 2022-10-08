@@ -24,6 +24,7 @@ public record Generator(Path cache, HttpClient http) {
   public static void main(String... args) throws Exception {
     GenerateFXGL.main("17");
     GenerateFXGL.main("17.1");
+    GenerateFXGL.main("17.2");
     GenerateGluonAttach.main("4.0.14");
     GenerateJavaFX.main("18");
     GenerateJavaFX.main("18.0.1");
