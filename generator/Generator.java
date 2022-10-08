@@ -29,6 +29,7 @@ public record Generator(Path cache, HttpClient http) {
     GenerateGluonAttach.main("4.0.15");
     GenerateJavaFX.main("18");
     GenerateJavaFX.main("18.0.1");
+    GenerateJavaFX.main("19");
     GenerateJUnit.main("5.8.0");
     GenerateJUnit.main("5.8.1");
     GenerateJUnit.main("5.8.2");
