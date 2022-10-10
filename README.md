@@ -1,4 +1,4 @@
-# bach-info
+# bach-repository
 
 Bach's default repository for external assets
 
