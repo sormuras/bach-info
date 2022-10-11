@@ -81,7 +81,7 @@ public record Generator(Path cache, HttpClient http) {
     var directory = Path.of(".bach", "external-modules");
     var filename = cache.getFileName().toString();
     Files.createDirectories(directory);
-    var file = directory.resolve(filename + ".properties");
+    var file = directory.resolve(filename + ".library.properties");
     Files.write(file, lines);
     var modules =
         lines.stream()
