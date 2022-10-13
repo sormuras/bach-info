@@ -1,21 +1,23 @@
 # bach-register
 
-Bach's default repository for external asset index files.
+Bach's default register for external asset index files.
 
-## External Library Index Files
+## External Module Locator Index Files
 
-A library maps a set of Java module names to their external modular JAR file locations.
+A locator maps a set of Java module names to their external modular JAR file locations.
 
-A library named `NAME` ...
-- ... uses the `NAME.library.properties` index file name pattern.
+A named locator ...
+- ... uses the `<NAME>.module-locator.properties` index file name pattern.
 - ... is stored in the [.bach/external-modules](.bach/external-modules) folder.
-- ... is imported by running `bach import NAME [--from REGISTER]`.
+- ... is imported into the current project by running `bach import <NAME> [--from <REGISTER>]`.
 
-## External Tool Index Files
+An external module `M` can be loaded by running `bach load-module M` if and only if an imported locator contains a mapping for module `M`.
 
-A tool index file maps a set of local file paths to their remote file locations.
+## External Tool Directory Index Files
 
-A tool named `NAME` ...
-- ... uses the `NAME.tool.properties` index file name pattern
+A tool directory index file maps all required files of that tool to their remote file locations.
+
+A named tool directory index file ...
+- ... uses the `<NAME>.tool-directory.properties` index file name pattern
 - ... is stored in [.bach/external-tools](.bach/external-tools) folder.
-- ... is installed by running `bach install NAME [--from REGISTER]`.
+- ... is installed by running `bach install <NAME> [--from REGISTER]`.
