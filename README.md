@@ -1,23 +1,46 @@
-# bach-register
+# bach-info
 
-Bach's default register for external asset index files.
+Bach's default repository for external asset information files.
 
-## External Module Locator Index Files
+## External Modules Locator
 
-A locator maps a set of Java module names to their external modular JAR file locations.
+An external modules locator information file maps a set of Java module names to their external modular JAR file locations.
 
-A named locator ...
-- ... uses the `<NAME>.module-locator.properties` index file name pattern.
-- ... is stored in the [.bach/external-modules](.bach/external-modules) folder.
-- ... is imported into the current project by running `bach import <NAME> [--from <REGISTER>]`.
+A named external modules locator uses the `<NAME>.modules-locator.properties` file name pattern.
+Such files are stored in the [.bach/external-modules](.bach/external-modules) folder.
+A locator is imported from this default repository by running `bach import <NAME>`.
 
-An external module `M` can be loaded by running `bach load-module M` if and only if an imported locator contains a mapping for module `M`.
+## External Tool Directory
 
-## External Tool Directory Index Files
+A tool directory information file lists all files composing a complete tool installation.
+Each file information maps a local file name to its remote file location.
 
-A tool directory index file maps all required files of that tool to their remote file locations.
+A named tool directory file uses the `<NAME>.tool-directory.properties` file name pattern.
+Such files are stored in [.bach/external-tools](.bach/external-tools) folder.
+A tool directory information file and all  are installed from this default repository by running `bach install <NAME>`.
 
-A named tool directory index file ...
-- ... uses the `<NAME>.tool-directory.properties` index file name pattern
-- ... is stored in [.bach/external-tools](.bach/external-tools) folder.
-- ... is installed by running `bach install <NAME> [--from REGISTER]`.
+## Example Usage
+
+View:
+- [junit@5.9.1](.bach/external-modules/junit@5.9.1.modules-locator.properties)
+- [jreleaser@1.2.0](.bach/external-tools/jreleaser@1.2.0.tool-directory.properties)
+
+Use:
+```shell
+> bach import junit@5.9.1
+> bach load-module org.junit.jupiter
+> bach load-module org.junit.jupiter.api
+> bach load-module org.junit.jupiter.engine
+...
+> bach load-modules org.junit.platform.console
+```
+
+Result:
+```text
+.bach/external-modules
+.bach/external-tools
+.bach/external-tools/google-java-format@1.15.0
+.bach/external-tools/google-java-format@1.15.0/google-java-format-1.15.0-all-deps.jar
+.bach/external-tools/google-java-format@1.15.0/README.md
+.bach/external-tools/google-java-format@1.15.0.tool-directory.properties
+```

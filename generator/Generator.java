@@ -22,18 +22,9 @@ import java.util.Optional;
 public record Generator(Path cache, HttpClient http) {
 
   public static void main(String... args) throws Exception {
-    GenerateFXGL.main("17");
-    GenerateFXGL.main("17.1");
     GenerateFXGL.main("17.2");
-    GenerateGluonAttach.main("4.0.14");
     GenerateGluonAttach.main("4.0.15");
-    GenerateJavaFX.main("18");
-    GenerateJavaFX.main("18.0.1");
     GenerateJavaFX.main("19");
-    GenerateJUnit.main("5.8.0");
-    GenerateJUnit.main("5.8.1");
-    GenerateJUnit.main("5.8.2");
-    GenerateJUnit.main("5.9.0");
     GenerateJUnit.main("5.9.1");
     GenerateLWJGL.main("3.3.1");
   }
@@ -81,8 +72,8 @@ public record Generator(Path cache, HttpClient http) {
     var directory = Path.of(".bach", "external-modules");
     var filename = cache.getFileName().toString();
     Files.createDirectories(directory);
-    var file = directory.resolve(filename + ".library.properties");
-    Files.write(file, lines);
+    var file = directory.resolve(filename + ".modules-locator.properties");
+    Files.writeString(file, String.join("\n", lines));
     var modules =
         lines.stream()
             .filter(line -> !line.isBlank())
