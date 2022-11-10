@@ -8,7 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Properties;
+import java.util.StringJoiner;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 class validate {
@@ -65,6 +67,51 @@ class validate {
       }
       return;
     }
+    var maven = Pattern.compile("(.+):(.+):(.+)");
+    var matcher = maven.matcher(value);
+    if (matcher.matches()) {
+      var group = matcher.group(1);
+      var artifact = matcher.group(2);
+      var version = matcher.group(3);
+      var uri = Maven.central(group, artifact, version);
+      var request = HttpRequest.newBuilder(uri).method("HEAD", BodyPublishers.noBody()).build();
+      var response = http.send(request, BodyHandlers.discarding());
+      if (response.statusCode() == 200) {
+        var size = response.headers().firstValueAsLong("Content-Length").orElse(-1);
+        System.out.printf("%s=%s#SIZE=%d%n", key, uri, size);
+      } else {
+        response
+            .headers()
+            .map()
+            .forEach((header, entry) -> System.out.printf("%s -> %s%n", header, entry));
+      }
+      return;
+    }
     System.out.printf("Unknown property protocol %s=%s%n", key, value);
+  }
+
+  record Maven(
+      String repository,
+      String group,
+      String artifact,
+      String version,
+      String classifier,
+      String type) {
+
+    static final String CENTRAL_REPOSITORY = "https://repo.maven.apache.org/maven2";
+    static final String DEFAULT_CLASSIFIER = "", DEFAULT_TYPE = "jar";
+
+    static URI central(String group, String artifact, String version) {
+      return new Maven(
+              CENTRAL_REPOSITORY, group, artifact, version, DEFAULT_CLASSIFIER, DEFAULT_TYPE)
+          .toUri();
+    }
+
+    URI toUri() {
+      var joiner = new StringJoiner("/").add(repository);
+      joiner.add(group.replace('.', '/')).add(artifact).add(version);
+      var file = artifact + '-' + (classifier.isBlank() ? version : version + '-' + classifier);
+      return URI.create(joiner.add(file + '.' + type).toString());
+    }
   }
 }
