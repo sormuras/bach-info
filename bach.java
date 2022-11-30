@@ -1,87 +1,140 @@
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.file.CopyOption;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.spi.ToolProvider;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 /** Static helpers setting up new and managing existing installations of Bach. */
 @SuppressWarnings("unused")
 public interface bach {
 
-  String DEFAULT_HOME = ".bach";
-  String DEFAULT_VERSION = "main";
-
-  static void main(String... args) {
-    util.say("main");
+  static void main(String... args) throws Exception {
+    init.bach(args.length == 0 ? init.DEFAULT_VERSION : args[0]);
   }
 
-  static void info() {
-    util.say("info");
-  }
+  interface init {
+    String DEFAULT_HOME = ".bach";
+    String DEFAULT_VERSION = "main";
 
-  interface install {
-    static void bach(String version) {
-      util.say("install bach " + version);
+    static void bach() throws Exception {
+      bach(DEFAULT_VERSION);
     }
 
-    interface external {
-      static void tool(String name) {
-        System.out.println("install external tool");
-      }
+    static void bach(String version) throws Exception {
+      var home = Path.of(System.getProperty("bach.home", DEFAULT_HOME));
+      bach(version, home);
+    }
 
-      static void modules(String... names) {
-        util.say("install external modules " + String.join(" ", names));
-      }
+    static void bach(String version, Path home) throws Exception {
+      util.say("Initialize Bach version %s in %s...".formatted(version, home.toUri()));
+      // download sources to temporary directory
+      var src = "https://github.com/sormuras/bach/archive/" + version + ".zip";
+      var tmp = Files.createTempDirectory("bach-" + version + "-");
+      var zip = tmp.resolve("bach-archive-" + version + ".zip");
+      util.files.copy(src, zip, StandardCopyOption.REPLACE_EXISTING);
+      var from = tmp.resolve("bach-archive-" + version); // unzipped
+      util.files.unzip(zip, from);
+      util.shell.bach(from, "build");
+      util.files.delete(home.resolve("bin"));
+      Files.createDirectories(home.resolve("bin"));
+      Files.copy(from.resolve("bin/bach"), home.resolve("bin/bach")); // bash script
+      Files.copy(from.resolve("bin/bach.bat"), home.resolve("bin/bach.bat"));
+      Files.copy(from.resolve(".bach/out/modules/run.bach.jar"), home.resolve("bin/run.bach.jar"));
+      //noinspection ResultOfMethodCallIgnored
+      home.resolve("bin/bach").toFile().setExecutable(true, true);
+      // util.files.delete(tmp);
+      util.say("Initialized Bach %s".formatted(version));
     }
   }
 
   interface util {
 
     interface files {
-      static Path copy(String source, String target) throws Exception {
-        return copy(source, Path.of(target), StandardCopyOption.REPLACE_EXISTING);
-      }
-
-      static Path copy(String source, Path target, CopyOption... options) throws Exception {
+      static void copy(String source, Path target, CopyOption... options) throws Exception {
         say("<< %s".formatted(source));
         Files.createDirectories(target.getParent());
         try (var stream =
-                     source.startsWith("http")
-                             ? URI.create(source).toURL().openStream()
-                             : Files.newInputStream(Path.of(source))) {
+            source.startsWith("http")
+                ? URI.create(source).toURL().openStream()
+                : Files.newInputStream(Path.of(source))) {
           var size = Files.copy(stream, target, options);
           say(">> %,7d %s".formatted(size, target.getFileName()));
         }
-        return target;
       }
 
-      static void delete(Path start) throws Exception {
+      static void delete(Path path) throws Exception {
+        var start = path.normalize().toAbsolutePath();
         if (Files.notExists(start)) return;
-        say("delete directory tree " + start);
-        var roots =
-                StreamSupport.stream(start.getFileSystem().getRootDirectories().spliterator(), false)
-                        .toList();
-        if (roots.contains(start.normalize())) {
-          System.err.println("won't remove root directory: " + start);
-          return;
+        for (var root : start.getFileSystem().getRootDirectories()) {
+          if (start.equals(root)) {
+            System.err.println("deletion of root directory?! " + path);
+            return;
+          }
         }
+        say("delete directory tree " + start);
         try (var stream = Files.walk(start)) {
           var files = stream.sorted((p, q) -> -p.compareTo(q));
           for (var file : files.toArray(Path[]::new)) Files.deleteIfExists(file);
         }
       }
+
+      static void unzip(Path zip, Path dir) throws Exception {
+        say("<< %s".formatted(zip.toUri()));
+        var files = new ArrayList<Path>();
+        try (var fs = FileSystems.newFileSystem(zip)) {
+          for (var root : fs.getRootDirectories()) {
+            try (var stream = Files.walk(root)) {
+              var list = stream.filter(Files::isRegularFile).toList();
+              for (var file : list) {
+                  var target = dir.resolve(file.subpath(1, file.getNameCount()).toString());
+                  // verbose(target.toUri().toString());
+                  Files.createDirectories(target.getParent());
+                  Files.copy(file, target, StandardCopyOption.REPLACE_EXISTING);
+                  files.add(target);
+
+              }
+            }
+          }
+        }
+        say(">> %d files copied".formatted(files.size()));
+      }
     }
 
-    interface tool {
-      static void run(String name, Object... args) {
-        var tool = ToolProvider.findFirst(name).orElseThrow();
-        var strings = Stream.of(args).map(Object::toString).toList();
-        say(name + " " + String.join(" ", strings));
-        var code = tool.run(System.out, System.err, strings.toArray(String[]::new));
-        if (code != 0) throw new RuntimeException(name + " returned error code " + code);
+    interface shell {
+      static void bach(Path directory, String... arguments) throws Exception {
+        var builder = new ProcessBuilder();
+        builder.environment().put("JAVA_HOME", System.getProperty("java.home"));
+        builder.directory(directory.toFile());
+        var command = builder.command();
+        if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+          command.add("cmd.exe");
+          command.add("/c");
+          command.add("bin\\bach.bat");
+        } else {
+          command.add("sh");
+          command.add("-c");
+          command.add("bin/bach");
+        }
+        command.addAll(List.of(arguments));
+        say("%s -> %s".formatted(builder.directory(), builder.command()));
+        record LinePrinter(InputStream stream, Consumer<String> consumer) implements Runnable {
+          @Override
+          public void run() {
+            new BufferedReader(new InputStreamReader(stream)).lines().forEach(consumer);
+          }
+        }
+        var process = builder.start();
+        new Thread(new LinePrinter(process.getInputStream(), System.out::println)).start();
+        new Thread(new LinePrinter(process.getErrorStream(), System.err::println)).start();
+        int code = process.waitFor();
+        if (code != 0) throw new RuntimeException("Non-zero exit code " + code);
       }
     }
 
