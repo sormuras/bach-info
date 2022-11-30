@@ -39,17 +39,20 @@ public interface bach {
       var tmp = Files.createTempDirectory("bach-" + version + "-");
       var zip = tmp.resolve("bach-archive-" + version + ".zip");
       util.files.copy(src, zip, StandardCopyOption.REPLACE_EXISTING);
+      // unzip and mark bash script as executable
       var from = tmp.resolve("bach-archive-" + version); // unzipped
       util.files.unzip(zip, from);
+      //noinspection ResultOfMethodCallIgnored
+      from.resolve("bin/bach").toFile().setExecutable(true, true);
+      // build bach
       util.shell.bach(from, "build");
+      // refresh binary directory
       util.files.delete(home.resolve("bin"));
       Files.createDirectories(home.resolve("bin"));
-      Files.copy(from.resolve("bin/bach"), home.resolve("bin/bach")); // bash script
+      Files.copy(from.resolve("bin/bach"), home.resolve("bin/bach"));
       Files.copy(from.resolve("bin/bach.bat"), home.resolve("bin/bach.bat"));
       Files.copy(from.resolve(".bach/out/modules/run.bach.jar"), home.resolve("bin/run.bach.jar"));
-      //noinspection ResultOfMethodCallIgnored
-      home.resolve("bin/bach").toFile().setExecutable(true, true);
-      // util.files.delete(tmp);
+      util.files.delete(tmp);
       util.say("Initialized Bach %s".formatted(version));
     }
   }
