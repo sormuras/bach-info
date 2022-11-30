@@ -121,8 +121,6 @@ public interface bach {
           command.add("/c");
           command.add("bin\\bach.bat");
         } else {
-          command.add("sh");
-          command.add("-c");
           command.add("bin/bach");
         }
         command.addAll(List.of(arguments));
