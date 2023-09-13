@@ -10,7 +10,7 @@ public class GenerateJavaFX {
   private static final String MAVEN_GROUP = "org.openjfx";
 
   public static void main(String... args) throws Exception {
-    var version = args.length == 0 ? "18" : args[0];
+    var version = args.length == 0 ? "20.0.2" : args[0];
     var generator = Generator.of("javafx", "javafx@" + version);
 
     var lines =
