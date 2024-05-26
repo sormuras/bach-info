@@ -7,7 +7,7 @@ package run.info.bach;
 
 import java.net.URI;
 import run.bach.ModuleLookup;
-import run.bach.info.Maven;
+import run.bach.info.MavenComponent;
 import run.bach.info.OperatingSystem;
 
 /**
@@ -27,7 +27,7 @@ public record JavaFX(String version, String classifier) implements ModuleLookup 
   @Override
   public URI lookupModule(String name) {
     var artifact = name.replace('.', '-');
-    var component = Maven.Component.central("org.openjfx", artifact, version, classifier);
+    var component = MavenComponent.ofCentral("org.openjfx", artifact, version, classifier);
     return component.toUri();
   }
 
