@@ -5,6 +5,7 @@
 
 package run.info.bach;
 
+import java.util.Set;
 import run.bach.ModuleLocator;
 import run.bach.info.MavenCoordinate;
 import run.bach.info.OperatingSystem;
@@ -23,11 +24,28 @@ public record JavaFX(String version, String classifier) implements ModuleLocator
     return new JavaFX(version, computeClassifier(os));
   }
 
+  /**
+   * @see <a href="https://repo.maven.apache.org/maven2/org/openjfx/">org.openjfx</a>
+   */
   @Override
-  public Location locate(String name) {
-    var artifact = name.replace('.', '-');
-    var coordinate = MavenCoordinate.ofCentral("org.openjfx", artifact, version, classifier);
-    return Location.of(name, coordinate.toUri().toString());
+  public Set<String> names() {
+    return Set.of(
+        "javafx.base",
+        "javafx.controls",
+        "javafx.fxml",
+        "javafx.graphics",
+        "javafx.media",
+        "javafx.swing",
+        "javafx.web");
+  }
+
+  @Override
+  public Location locate(String module) {
+    if (!names().contains(module)) return Location.unknown(module);
+    var group = "org.openjfx";
+    var artifact = module.replace('.', '-');
+    var coordinate = MavenCoordinate.ofCentral(group, artifact, version, classifier);
+    return Location.of(module, coordinate.toUri().toString());
   }
 
   public static String computeClassifier(OperatingSystem os) {
