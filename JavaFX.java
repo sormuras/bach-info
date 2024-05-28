@@ -5,9 +5,8 @@
 
 package run.info.bach;
 
-import java.net.URI;
-import run.bach.ModuleLookup;
-import run.bach.info.MavenComponent;
+import run.bach.ModuleLocator;
+import run.bach.info.MavenCoordinate;
 import run.bach.info.OperatingSystem;
 
 /**
@@ -15,7 +14,7 @@ import run.bach.info.OperatingSystem;
  *
  * @see <a href="https://openjfx.io">Homepage</a>
  */
-public record JavaFX(String version, String classifier) implements ModuleLookup {
+public record JavaFX(String version, String classifier) implements ModuleLocator {
   public static JavaFX version(String version) {
     return version(version, OperatingSystem.CURRENT);
   }
@@ -25,10 +24,10 @@ public record JavaFX(String version, String classifier) implements ModuleLookup 
   }
 
   @Override
-  public URI lookupModule(String name) {
+  public Location locate(String name) {
     var artifact = name.replace('.', '-');
-    var component = MavenComponent.ofCentral("org.openjfx", artifact, version, classifier);
-    return component.toUri();
+    var coordinate = MavenCoordinate.ofCentral("org.openjfx", artifact, version, classifier);
+    return Location.of(name, coordinate.toUri().toString());
   }
 
   public static String computeClassifier(OperatingSystem os) {
