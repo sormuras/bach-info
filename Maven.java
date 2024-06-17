@@ -18,7 +18,7 @@ import run.bach.ToolProgram;
  * @see <a href="https://maven.apache.org">https://maven.apache.org</a>
  */
 public record Maven(String version) implements ToolInstaller {
-  public static final String DEFAULT_VERSION = "3.9.7";
+  public static final String DEFAULT_VERSION = "3.9.8";
 
   public static void main(String... args) {
     var version = System.getProperty("version", DEFAULT_VERSION);
